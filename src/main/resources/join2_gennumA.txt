@@ -1,0 +1,7 @@
+Almost_News, 25
+Hourly_Show,30
+Hot_Cooking,7
+Almost_News, 35
+Postmodern_Family,8
+Baked_News,15
+Dumb_Games,60
