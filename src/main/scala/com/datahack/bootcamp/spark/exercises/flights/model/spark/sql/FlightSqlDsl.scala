@@ -16,9 +16,7 @@ class FlightCsvReader(self: RDD[String]) (implicit session: SparkSession){
     * Tip: Crear un Flight y usar el método to FlightSql.
     *
     */
-  def toDataFrame: Dataset[FlightSql] = {
-    session.createDataset(self.map(line => Flight(line.split(",")).toFlightSql)).cache()
-  }
+  def toDataFrame: Dataset[FlightSql] = ???
 }
 
 class FlightFunctions(self: Dataset[FlightSql]) (implicit session: SparkSession) {
@@ -32,9 +30,7 @@ class FlightFunctions(self: Dataset[FlightSql]) (implicit session: SparkSession)
     * Tip: Para usar funciones de aggregación df.agg(sum('distance) as "suma"
     *
     */
-  def averageDistanceByAirport: DataFrame = {
-    self.select('origin, 'distance).groupBy('origin).agg("distance" -> "avg")
-  }
+  def averageDistanceByAirport: DataFrame = ???
 
   /**
     *
@@ -46,13 +42,7 @@ class FlightFunctions(self: Dataset[FlightSql]) (implicit session: SparkSession)
     *  Tip: Se pueden utilizar funciones propias del estándar SQL.
     *  ej: Extraer el año de un campo fecha llamado date:  year('date)
     */
-  def minFuelConsumptionByMonthAndAirport(fuelPrice: DataFrame): DataFrame = {
-    self.select(year('date) as 'year, month('date) as 'month, 'origin, 'distance)
-      .join(fuelPrice, "year" :: "month" :: Nil)
-      .groupBy('origin, 'month, 'year).agg(sum('price * 'distance) as "sum")
-      .groupBy('origin).agg(min('sum) as "sum")
-      .orderBy('sum asc)
-  }
+  def minFuelConsumptionByMonthAndAirport(fuelPrice: DataFrame): DataFrame = ???
 }
 
 
