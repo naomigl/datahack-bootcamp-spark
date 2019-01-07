@@ -5,10 +5,10 @@ import org.apache.spark.{SparkConf, SparkContext}
 object ReduceByKey {
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Simple Application")
       .setMaster("local[2]")
-    val sc = new SparkContext(conf)
+    val sc: SparkContext = new SparkContext(conf)
 
     firstExample(sc)
     secondExample(sc)
@@ -16,7 +16,7 @@ object ReduceByKey {
     sc.stop()
   }
 
-  // lets have a look at what is in the partitions
+  // Este método pinta el contenido de cada partición de un RDD.
   def myfunc(index: Int, iter: Iterator[Any]) : Iterator[String] = {
     iter.toList.map(x => "[partID: " +  index + ", val: " + x + "]").iterator
   }

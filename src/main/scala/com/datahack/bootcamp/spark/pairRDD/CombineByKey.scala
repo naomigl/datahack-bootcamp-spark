@@ -15,7 +15,7 @@ object CombineByKey {
     sc.stop()
   }
 
-  // lets have a look at what is in the partitions
+  // Este método pinta el contenido de cada partición de un RDD.
   def myfunc(index: Int, iter: Iterator[(Any, Any)]) : Iterator[Any] = {
     iter.toList.map(x => "[partID: " +  index + ", val: " + x + "]").iterator
   }

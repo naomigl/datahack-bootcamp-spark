@@ -10,10 +10,10 @@ object WordCountPurple {
   lazy val purpleTextUrl = "src/main/resources/purple.txt"
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Word Count Purple")
       .setMaster("local[2]")
-    val sc = new SparkContext(conf)
+    val sc: SparkContext = new SparkContext(conf)
 
     firstExample(sc)
     secondExample(sc)
@@ -23,14 +23,14 @@ object WordCountPurple {
   def firstExample(sc: SparkContext): Unit = {
     val file = sc.textFile(purpleTextUrl)
     val words = file.flatMap(_.split(" ")).filter(w => w.contains("l")).map(w => (w,w.length)).collect()
-    println("------- Result ---------")
+    println("------- First Example ---------")
     words.foreach(println)
   }
 
   def secondExample(sc: SparkContext): Unit = {
     val file = sc.textFile(purpleTextUrl)
     val words = file.flatMap(_.split(" ")).flatMap(word => if(word.contains("l")) Seq((word, word.length)) else Seq()).collect()
-    println("------- Result ---------")
+    println("------- Second example ---------")
     words.foreach(println)
   }
 }

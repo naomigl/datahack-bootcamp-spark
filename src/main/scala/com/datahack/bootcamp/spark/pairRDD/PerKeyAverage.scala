@@ -6,18 +6,19 @@ import org.apache.spark.rdd.RDD
 object PerKeyAverage {
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Simple Application")
       .setMaster("local[2]")
-    val sc = new SparkContext(conf)
+    val sc
+    = new SparkContext(conf)
 
     val pairRDD: RDD[(String, Int)] =
       sc.parallelize(List(("cat", 2), ("cat", 5), ("mouse", 4), ("cat", 12), ("dog", 12), ("mouse", 2)), 2)
 
     val spartitions: Array[String] = pairRDD.mapPartitionsWithIndex(myfunc).collect()
     val averageAggregated: Array[(String, Float)] = getPerKeyAverageUsingAggregateByKey(pairRDD).collect()
-    val averageCombined = getPerKeyAverageUsingCombineByKey(pairRDD).collect()
-    val averageReduced = getPerKeyAverageUsingReduceByKey(pairRDD).collect()
+    val averageCombined: Array[(String, Float)] = getPerKeyAverageUsingCombineByKey(pairRDD).collect()
+    val averageReduced: Array[(String, Float)] = getPerKeyAverageUsingReduceByKey(pairRDD).collect()
 
     println("------ Values: ")
     spartitions.foreach(println)
@@ -30,11 +31,12 @@ object PerKeyAverage {
     sc.stop()
   }
 
-  // lets have a look at what is in the partitions
+  // Este método pinta el contenido de cada partición de un RDD.
   def myfunc(index: Int, iter: Iterator[(String, Int)]) : Iterator[String] = {
     iter.toList.map(x => "[partID: " +  index + ", val: " + x + "]").iterator
   }
 
+  // TODO: Obten la media por clave utilizando aggregateByKey
   def getPerKeyAverageUsingAggregateByKey(values: RDD[(String, Int)]): RDD[(String, Float)] = {
     val zeroValue = (0,0)
     val mergeValue = (v1: (Int, Int), v2: Int) => (v1._1 + v2, v1._2 + 1)
@@ -44,6 +46,7 @@ object PerKeyAverage {
       .map(f => (f._1, f._2._1.toFloat / f._2._2.toFloat))
   }
 
+  // TODO: Obten la media por clave utilizando combineByKey
   def getPerKeyAverageUsingCombineByKey(values: RDD[(String, Int)]): RDD[(String, Float)] = {
     val createCombiner = (v: Int) => (v, 1)
     val mergeValue = (v1: (Int, Int), v2: Int) => (v1._1 + v2, v1._2 + 1)
@@ -56,7 +59,7 @@ object PerKeyAverage {
       .map(f => (f._1, f._2._1.toFloat / f._2._2.toFloat))
   }
 
-
+  // TODO: Obten la media por clave utilizando reduceByKey
   def getPerKeyAverageUsingReduceByKey(values: RDD[(String, Int)]): RDD[(String, Float)] = {
     values
       .mapValues(v => (v,1))

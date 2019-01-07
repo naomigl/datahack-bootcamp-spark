@@ -9,38 +9,38 @@ object SimpleJoin {
   val countFilesPathUrl = "src/main/resources/join2_gennumA.txt"
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Simple Join 2")
       .setMaster("local[2]")
-    val sc = new SparkContext(conf)
+    val sc: SparkContext = new SparkContext(conf)
 
-    val channels = sc.textFile(channelFilesPathUrl)
-    val views = sc.textFile(countFilesPathUrl)
+    val channels: RDD[String] = sc.textFile(channelFilesPathUrl)
+    val views: RDD[String] = sc.textFile(countFilesPathUrl)
 
-    val show_views = views.map(splitShowViews)
-    val show_channel = channels.map(splitShowChannel)
+    val show_views: RDD[(String, Int)] = views.map(splitShowViews)
+    val show_channel: RDD[(String, String)] = channels.map(splitShowChannel)
 
     //(Show, (Channel, Views))
     val joinedDataSet: RDD[(String, (String, Int))] = show_channel.join(show_views)
-    val channelViews = joinedDataSet.map(extractChannelViews)
+    val channelViews: RDD[(String, Int)] = joinedDataSet.map(extractChannelViews)
 
-    val result = channelViews.reduceByKey(_+_).collect()
+    val result: Array[(String, Int)] = channelViews.reduceByKey(_+_).collect()
     result.foreach(println)
 
     sc.stop()
   }
 
   def splitShowViews(line: String): (String, Int) = {
-    val showViews = line.split(",")
-    val show = showViews(0)
-    val views = showViews(1).replace(" ", "").toInt
+    val showViews: Array[String] = line.split(",")
+    val show: String = showViews(0)
+    val views: Int = showViews(1).replace(" ", "").toInt
     (show, views)
   }
 
   def splitShowChannel(line: String): (String, String) = {
-    val showChannel = line.split(",")
-    val show = showChannel(0)
-    val channel = showChannel(1)
+    val showChannel: Array[String] = line.split(",")
+    val show: String = showChannel(0)
+    val channel: String = showChannel(1)
     (show, channel)
   }
 

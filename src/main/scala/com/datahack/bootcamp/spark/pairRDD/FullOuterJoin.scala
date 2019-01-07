@@ -1,6 +1,9 @@
 package com.datahack.bootcamp.spark.pairRDD
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+
+import scala.collection.immutable
 
 object FullOuterJoin {
 
@@ -8,19 +11,19 @@ object FullOuterJoin {
   val fileBurl = "src/main/resources/join1_FileB.txt"
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Simple Application")
       .setMaster("local[2]")
-    val sc = new SparkContext(conf)
+    val sc: SparkContext = new SparkContext(conf)
 
-    val fileA = sc.textFile(fileAurl)
-    val fileB = sc.textFile(fileBurl)
+    val fileA: RDD[String] = sc.textFile(fileAurl)
+    val fileB: RDD[String] = sc.textFile(fileBurl)
 
-    val fileA_data = fileA.map(split_fileA)
-    val fileB_data = fileB.map(split_fileB)
+    val fileA_data: RDD[(String, Int)] = fileA.map(split_fileA)
+    val fileB_data: RDD[(String, String)] = fileB.map(split_fileB)
 
-    val fileB_joined_fileA = fileB_data.fullOuterJoin(fileA_data)
-    val result = fileB_joined_fileA.collect().toList
+    val fileB_joined_fileA: RDD[(String, (Option[String], Option[Int]))] = fileB_data.fullOuterJoin(fileA_data)
+    val result: immutable.Seq[(String, (Option[String], Option[Int]))] = fileB_joined_fileA.collect().toList
 
     println(result)
 
@@ -28,22 +31,23 @@ object FullOuterJoin {
   }
 
   def split_fileA(line: String): (String, Int) = {
-    // split the input line in word and count on the comma
-    val splitedLine = line.split(",")
-    val word = splitedLine(0)
-    // turn the count to an integer
-    val count = splitedLine(1).toInt
+    // Dividimos la línea del fichero en palabra u total separadaos por una coma
+    val splitedLine: Array[String] = line.split(",")
+    val word: String = splitedLine(0)
+    // Convertimos el toal en entero
+    val count: Int = splitedLine(1).toInt
+    // Devolvemos una tupla para crear el Pair RDD
     (word, count)
   }
 
   def split_fileB(line: String): (String, String) = {
-    // split the input line into word, date and count_string
-    val splitedLineByComma = line.split(",")
-    val count_string = splitedLineByComma(1)
-    val wordAndDate = splitedLineByComma(0)
-    val splitedLineByBlank = wordAndDate.split(" ")
-    val date = splitedLineByBlank(0)
-    val word = splitedLineByBlank(1)
+    // Dividimos la línea del fichero en palabra, fecha y total
+    val splitedLineByComma: Array[String] = line.split(",")
+    val count_string: String = splitedLineByComma(1)
+    val wordAndDate: String = splitedLineByComma(0)
+    val splitedLineByBlank: Array[String] = wordAndDate.split(" ")
+    val date: String = splitedLineByBlank(0)
+    val word: String = splitedLineByBlank(1)
     (word, date + " " + count_string)
   }
 }

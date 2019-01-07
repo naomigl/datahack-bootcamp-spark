@@ -1,6 +1,5 @@
 package com.datahack.bootcamp.spark.pairRDD
 
-import com.datahack.bootcamp.spark.pairRDD.AggregateByKey.myfunc
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -20,7 +19,7 @@ object FoldByKey {
 
   def firstExample(sc: SparkContext): Unit = {
     val rddA: RDD[String] = sc.parallelize(List("dog", "cat", "owl", "gnu", "ant"), 2)
-    val rddB = rddA.map(x => (x.length, x))
+    val rddB: RDD[(Int, String)] = rddA.map(x => (x.length, x))
     val result: Array[(Int, String)] = rddB.foldByKey("")(_ + _).collect
 
     println("---------- Example 1 ----------")
@@ -29,8 +28,8 @@ object FoldByKey {
   }
 
   def secondExample(sc: SparkContext): Unit = {
-    val rddA = sc.parallelize(List("dog", "tiger", "lion", "cat", "panther", "eagle"), 2)
-    val rddB = rddA.map(x => (x.length, x))
+    val rddA: RDD[String] = sc.parallelize(List("dog", "tiger", "lion", "cat", "panther", "eagle"), 2)
+    val rddB: RDD[(Int, String)] = rddA.map(x => (x.length, x))
     val result: Array[(Int, String)] = rddB.foldByKey("")(_ + _).collect
 
     println("---------- Example 2 ----------")

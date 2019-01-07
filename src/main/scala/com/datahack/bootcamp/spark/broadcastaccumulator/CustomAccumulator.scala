@@ -1,17 +1,17 @@
 package com.datahack.bootcamp.spark.broadcastaccumulator
 
-import org.apache.spark.{AccumulableParam, SparkConf, SparkContext}
+import org.apache.spark.{Accumulable, AccumulableParam, SparkConf, SparkContext}
 
 object CustomAccumulator {
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Accumulator")
       .setMaster("local[2]")
     val sc: SparkContext = new SparkContext(conf)
 
-    implicit val param = new AccumulableMap()
-    val empAccu = sc.accumulable(Map[Int, Employee]())
-    val employees = List(
+    implicit val param: AccumulableMap = new AccumulableMap()
+    val empAccu: Accumulable[Map[Int, Employee], Employee] = sc.accumulable(Map[Int, Employee]())
+    val employees: List[Employee] = List(
       Employee(10001, "Tom", "Eng"),
       Employee(10002, "Roger", "Sales"),
       Employee(10003, "Rafael", "Sales"))

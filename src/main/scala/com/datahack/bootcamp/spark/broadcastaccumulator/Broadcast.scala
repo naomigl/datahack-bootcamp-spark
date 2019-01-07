@@ -5,12 +5,12 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Broadcast {
 
   def main(args: Array[String]) {
-    val conf = new SparkConf()
+    val conf: SparkConf = new SparkConf()
       .setAppName("Accumulator")
       .setMaster("local[2]")
     val sc: SparkContext = new SparkContext(conf)
 
-    val items = List[(String, Double)] (
+    val items: List[(String, Double)] = List[(String, Double)] (
       ("item1", 12.8),
       ("item2", 3.4),
       ("item3", 10.0),
