@@ -4,20 +4,16 @@ import org.apache.spark.{Accumulable, AccumulableParam, SparkConf, SparkContext}
 
 object CustomAccumulator {
   def main(args: Array[String]) {
-    val conf: SparkConf = new SparkConf()
-      .setAppName("Accumulator")
-      .setMaster("local[2]")
-    val sc: SparkContext = new SparkContext(conf)
+    val conf: SparkConf = ???
+    val sc: SparkContext = ???
 
-    implicit val param: AccumulableMap = new AccumulableMap()
-    val empAccu: Accumulable[Map[Int, Employee], Employee] = sc.accumulable(Map[Int, Employee]())
+    implicit val param: AccumulableMap = ???
+    val empAccu: Accumulable[Map[Int, Employee], Employee] = ???
+
     val employees: List[Employee] = List(
       Employee(10001, "Tom", "Eng"),
       Employee(10002, "Roger", "Sales"),
       Employee(10003, "Rafael", "Sales"))
-    sc.parallelize(employees).foreach(e => empAccu += e)
-    println("--------------Employees: ")
-    empAccu.value.foreach(entry => println(s"emp id = ${entry._1} name = ${entry._2.name}"))
 
     sc.stop()
   }

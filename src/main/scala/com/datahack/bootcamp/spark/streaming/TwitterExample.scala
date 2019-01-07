@@ -1,7 +1,7 @@
 package com.datahack.bootcamp.spark.streaming
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.{SparkConf, streaming}
+import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.ReceiverInputDStream
 import org.apache.spark.streaming.twitter.TwitterUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
