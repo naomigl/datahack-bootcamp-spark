@@ -44,9 +44,8 @@ object HappyNumbers {
 
   // Realiza el ejercicio utilizando las funciones .map() y .aggregate()
   def secondExercise(words: RDD[String]) = {
-    val happyWords: Array[(String, Int)] = words.map(w => (w, w.toList.map(Happy.charToInt).sum))
-      .map(w => (w._1, w._2, Happy.happy(w._2, List.empty)))
-      .filter(_._3).map(w => (w._1, w._2)).collect()
+    val happyWords: Seq[(String, Int)] = words.map(w => (w, w.toList.map(Happy.charToInt).sum))
+      .aggregate(List.empty[(String, Int)])((x, y) => if(Happy.happy(y._2, List.empty)) x ++ List(y) else x, _ ++ _)
 
     println("------Result: ")
     happyWords.foreach(println)

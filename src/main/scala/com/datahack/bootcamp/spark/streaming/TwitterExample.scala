@@ -14,10 +14,10 @@ object TwitterExample extends App {
   // Configuramos las credenciales
   val conf = new ConfigurationBuilder()
   conf.setDebugEnabled(true)
-  conf.setOAuthConsumerKey("fOo0Na4giQ992KmYFcgQspKKg")
-  conf.setOAuthConsumerSecret("ftW5CcCIb7mIVmLzGBRCeeC1dwVR3LwWJp7klsmVVsrn2mlGug")
-  conf.setOAuthAccessToken("39812074-u1PB7wSt2yz7cTjY2V4hBz7EWobHVlytXJYPFzuyC")
-  conf.setOAuthAccessTokenSecret("dvGMVZaGaqV3bY7jUJDYiYdapgSUmJn3cDlW2mrtgnTRQ")
+  conf.setOAuthConsumerKey("")
+  conf.setOAuthConsumerSecret("")
+  conf.setOAuthAccessToken("")
+  conf.setOAuthAccessTokenSecret("")
 
   val rootLogger = Logger.getRootLogger
   rootLogger.setLevel(Level.ERROR)
