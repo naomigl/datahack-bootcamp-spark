@@ -5,8 +5,9 @@ import java.io.File
 object WikipediaData {
 
   def filePath = {
-    val resource = this.getClass.getClassLoader.getResource("src/main/resources/wikipedia.dat")
-    new File(resource.toURI).getPath
+    //val resource = this.getClass.getClassLoader.getResource("src/main/resources/wikipedia.dat")
+    //new File(resource.toURI).getPath
+    "src/main/resources/wikipedia.dat"
   }
 
   def parse(line: String): WikipediaArticle = {

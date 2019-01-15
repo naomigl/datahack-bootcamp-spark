@@ -32,7 +32,7 @@ object WikipediaRanking {
   // Utiliza para ello la clase WikipediaData
   lazy val wikiRdd: RDD[WikipediaArticle] = sc.textFile(WikipediaData.filePath).map(WikipediaData.parse)
 
-  // TODO: Este métdo devuelve el numero de artículos of articles en los que se mencione el lenguaje `lang`.
+  // TODO: Este métdo devuelve el numero de artículos en los que se mencione el lenguaje `lang`.
   // Consejo: considera utilizar el método aggregate
   // Consjeo: utiliza el método `mentionsLanguage` de la clase `WikipediaArticle`
   def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int =
@@ -68,15 +68,18 @@ object WikipediaRanking {
 
     // Ranking con aggregate
     val langsRanked: List[(String, Int)] = timed("Ejercicio 1: Ranking con aggregate", rankLangs(langs, wikiRdd))
+    println(s"Ranking con aggregate: $langsRanked")
 
     // Creamos el índice
     def index: RDD[(String, Iterable[WikipediaArticle])] = makeIndex(langs, wikiRdd)
 
     // Ranking con índice invertido
     val langsRanked2: List[(String, Int)] = timed("Ejercicio 2: Ranking con índice invertido", rankLangsUsingIndex(index))
+    println(s"Ranking con índice invertido: $langsRanked2")
 
     // Ranking con reduceByKey
     val langsRanked3: List[(String, Int)] = timed("Ejercicio 3: Ranking con reduceByKeyy", rankLangsReduceByKey(langs, wikiRdd))
+    println(s"Ranking con reduceByKeyy: $langsRanked3")
 
     // Pintamos el tiempo que no ha llevado cada ranking
     println(timing)
