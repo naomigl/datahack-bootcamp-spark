@@ -2,14 +2,12 @@ package com.datahack.bootcamp.spark.streaming
 
 import java.util.concurrent.Executors
 
-import com.datahack.bootcamp.spark.streaming.FirstExercise.{spark, windowedCounts}
-import com.datahack.bootcamp.spark.streaming.SecondExercise.{citySchema, spark}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 
-import org.apache.spark.sql.streaming.{ProcessingTime, StreamingQuery}
+import org.apache.spark.sql.streaming.StreamingQuery
 
 object FirstExercise extends App {
 
@@ -77,7 +75,7 @@ object FirstExercise extends App {
 
   // Número de bids por ciudad en ventanas de tiempo de 10 minutos
   val windowedCounts: StreamingQuery = streamingCityTimeDF
-    .groupBy(window($"ts", "10 minutes", "5 minutes"), $"cityID")
+    .groupBy(window($"ts", "2 minutes", "1 minutes"), $"cityID")
     .count()
     .writeStream.outputMode("complete")
     .format("console").start()
@@ -93,12 +91,10 @@ object FirstExercise extends App {
   }
 
   import java.util.concurrent.TimeUnit.SECONDS
-  // Stop the first query after 10 seconds
-  Executors.newSingleThreadScheduledExecutor.
-    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
 
-  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
-  // the current thread will block indefinitely until either streaming query has finished
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 20, SECONDS)
+
   spark.streams.awaitAnyTermination
 }
 
@@ -180,7 +176,7 @@ object SecondExercise extends App {
   val windowedCityCounts: StreamingQuery = joinedDF
     .groupBy(window($"ts", "10 minutes", "5 minutes"), $"cityName")
     .count()
-    .writeStream.outputMode("append")
+    .writeStream.outputMode("complete")
     .format("console").start()
 
   def queryTerminator(query: StreamingQuery) = new Runnable {
@@ -191,12 +187,10 @@ object SecondExercise extends App {
   }
 
   import java.util.concurrent.TimeUnit.SECONDS
-  // Stop the first query after 10 seconds
-  Executors.newSingleThreadScheduledExecutor.
-    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
 
-  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
-  // the current thread will block indefinitely until either streaming query has finished
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(windowedCityCounts), 1200, 60 * 5, SECONDS)
+
   spark.streams.awaitAnyTermination
 }
 
@@ -290,12 +284,10 @@ object ThirdExercise extends App {
   }
 
   import java.util.concurrent.TimeUnit.SECONDS
-  // Stop the first query after 10 seconds
-  Executors.newSingleThreadScheduledExecutor.
-    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
 
-  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
-  // the current thread will block indefinitely until either streaming query has finished
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(cityBids), 1200, 60 * 5, SECONDS)
+
   spark.streams.awaitAnyTermination
 
 }
@@ -408,6 +400,7 @@ object FourthExample extends App {
 
   spark.sql("select * from aggregateTable").show()
 
+  val citySchema = new StructType().add("cityID", StringType).add("cityName", StringType)
   val staticDF: DataFrame = spark.read
     .format("csv")
     .schema(citySchema)
@@ -439,27 +432,10 @@ object FourthExample extends App {
   }
 
   import java.util.concurrent.TimeUnit.SECONDS
-  // Stop the first query after 10 seconds
-  Executors.newSingleThreadScheduledExecutor.
-    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
 
-  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
-  // the current thread will block indefinitely until either streaming query has finished
+  Executors.newSingleThreadScheduledExecutor
+    .scheduleWithFixedDelay(queryTerminator(cityBidsParquet), 1200, 60 * 5, SECONDS)
+
   spark.streams.awaitAnyTermination
-
-  //Code for Monitoring streaming queries section
-  /*spark.streams.active
-    .foreach(x => println("ID:"+ x.id + "             Run ID:"+ x.runId + "               Status: "+ x.status))
-
-  // get the unique identifier of the running query that persists across restarts from checkpoint data
-  windowedCounts.id
-  // get the unique id of this run of the query, which will be generated at every start/restart
-  windowedCounts.runId
-  // the exception if the query has been terminated with error
-  windowedCounts.exception
-  // the most recent progress update of this streaming query
-  windowedCounts.lastProgress
-
-  windowedCounts.stop()*/
 
 }

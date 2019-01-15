@@ -86,11 +86,11 @@ object HappyDslImpl extends App with HappyDsl {
     .setMaster("local[2]")
   implicit val sc: SparkContext = new SparkContext(conf)
 
-  val file: RDD[String] = sc.textFile("src/main/resources/quijote.txt")
+  val file: RDD[String] = sc.textFile("/Users/rafaelgarrote/Downloads/quijote.txt")
   val words: RDD[String] = file.flatMap(_.split(" ")).map(_.toUpperCase).distinct().cache()
 
   val result = words.toInt.filterHappyNumber.collect()
-
+Thread.sleep(60000)
   println("------Result: ")
   result.foreach(println)
 

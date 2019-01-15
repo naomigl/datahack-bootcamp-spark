@@ -14,10 +14,10 @@ object TwitterExample extends App {
   // Configuramos las credenciales
   val conf = new ConfigurationBuilder()
   conf.setDebugEnabled(true)
-  conf.setOAuthConsumerKey("")
-  conf.setOAuthConsumerSecret("")
-  conf.setOAuthAccessToken("")
-  conf.setOAuthAccessTokenSecret("")
+  conf.setOAuthConsumerKey("fOo0Na4giQ992KmYFcgQspKKg")
+  conf.setOAuthConsumerSecret("ftW5CcCIb7mIVmLzGBRCeeC1dwVR3LwWJp7klsmVVsrn2mlGug")
+  conf.setOAuthAccessToken("39812074-u1PB7wSt2yz7cTjY2V4hBz7EWobHVlytXJYPFzuyC")
+  conf.setOAuthAccessTokenSecret("dvGMVZaGaqV3bY7jUJDYiYdapgSUmJn3cDlW2mrtgnTRQ")
 
   val rootLogger = Logger.getRootLogger
   rootLogger.setLevel(Level.ERROR)
@@ -26,17 +26,17 @@ object TwitterExample extends App {
     .setAppName("Tutorial")
     .setMaster("local[2]")
   val ssc = new StreamingContext(sparkConf, Seconds(5))
-  ssc.checkpoint("tmp")
+  ssc.checkpoint("target/tmp")
 
   // Creamos el stream de entrada desde Twitter
   val auth: Authorization = AuthorizationFactory.getInstance(conf.build())
   val stream: ReceiverInputDStream[Status] = TwitterUtils.createStream(ssc, twitterAuth = Some(auth))
 
   // Imprimimos el numero de tweets por batch
-  //stream.map(status => status.getLang).count().print()
+  //stream.filter(status => status.getLang == "en").count().print()
 
   // Imprimirmos cada 10 senundos el número de tweets recibidos en los último 30 segunds
-  stream.map(status => status.getLang).countByWindow(Seconds(30), Seconds(10)).print()
+  stream.filter(status => status.getLang == "en").countByWindow(Seconds(30), Seconds(10)).print()
   println(s"Start Time: ${System.currentTimeMillis()}")
   ssc.start()
   ssc.awaitTermination()
