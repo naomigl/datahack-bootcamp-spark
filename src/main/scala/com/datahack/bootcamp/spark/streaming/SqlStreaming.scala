@@ -1,33 +1,40 @@
 package com.datahack.bootcamp.spark.streaming
 
+import java.util.concurrent.Executors
+
+import com.datahack.bootcamp.spark.streaming.FirstExercise.{spark, windowedCounts}
+import com.datahack.bootcamp.spark.streaming.SecondExercise.{citySchema, spark}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 
-import scala.concurrent.duration._
 import org.apache.spark.sql.streaming.{ProcessingTime, StreamingQuery}
-import org.apache.spark.sql.streaming.OutputMode.Complete
 
-object SqlStreaming extends App {
+object FirstExercise extends App {
 
   val spark: SparkSession = SparkSession.builder()
-    .appName("Munging example")
+    .appName("Streaming example 1")
     .master("local[2]")
     .enableHiveSupport()
     .getOrCreate()
   val sc: SparkContext = spark.sparkContext
+
   import spark.implicits._
 
   // Register a StreamingQueryListener to receive notifications about state changes of streaming queries
   import org.apache.spark.sql.streaming.StreamingQueryListener
+
   val myQueryListener = new StreamingQueryListener {
+
     import org.apache.spark.sql.streaming.StreamingQueryListener._
+
     def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
       println(s"Query ${event.id} terminated")
     }
 
     def onQueryStarted(event: QueryStartedEvent): Unit = {}
+
     def onQueryProgress(event: QueryProgressEvent): Unit = {
       println(s"Query on progress ${event.progress}")
     }
@@ -65,11 +72,10 @@ object SqlStreaming extends App {
     .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/training2nd")
   streamingInputDF.printSchema()
 
-  //Code for Implementing sliding window-based functionality section
   val ts: Column = unix_timestamp($"timestamp", "yyyyMMddHHmmssSSS").cast("timestamp")
   val streamingCityTimeDF: DataFrame = streamingInputDF.withColumn("ts", ts).select($"cityID", $"ts")
 
-  //Wait for the output show on the screen after the next statement
+  // Número de bids por ciudad en ventanas de tiempo de 10 minutos
   val windowedCounts: StreamingQuery = streamingCityTimeDF
     .groupBy(window($"ts", "10 minutes", "5 minutes"), $"cityID")
     .count()
@@ -78,12 +84,14 @@ object SqlStreaming extends App {
 
   import java.util.concurrent.Executors
   import java.util.concurrent.TimeUnit.SECONDS
+
   def queryTerminator(query: StreamingQuery) = new Runnable {
     def run = {
       println(s"Stopping streaming query: ${query.id}")
       query.stop
     }
   }
+
   import java.util.concurrent.TimeUnit.SECONDS
   // Stop the first query after 10 seconds
   Executors.newSingleThreadScheduledExecutor.
@@ -92,10 +100,73 @@ object SqlStreaming extends App {
   // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
   // the current thread will block indefinitely until either streaming query has finished
   spark.streams.awaitAnyTermination
+}
 
-  /*Thread.sleep(120000)
+object SecondExercise extends App {
 
-  //Code for Joining a streaming dataset with a static dataset section
+  val spark: SparkSession = SparkSession.builder()
+    .appName("Streaming example 2")
+    .master("local[2]")
+    .enableHiveSupport()
+    .getOrCreate()
+  val sc: SparkContext = spark.sparkContext
+
+  import spark.implicits._
+
+  // Register a StreamingQueryListener to receive notifications about state changes of streaming queries
+  import org.apache.spark.sql.streaming.StreamingQueryListener
+
+  val myQueryListener = new StreamingQueryListener {
+
+    import org.apache.spark.sql.streaming.StreamingQueryListener._
+
+    def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
+      println(s"Query ${event.id} terminated")
+    }
+
+    def onQueryStarted(event: QueryStartedEvent): Unit = {}
+
+    def onQueryProgress(event: QueryProgressEvent): Unit = {
+      println(s"Query on progress ${event.progress}")
+    }
+  }
+  spark.streams.addListener(myQueryListener)
+
+  val bidSchema: StructType = new StructType()
+    .add("bidid", StringType)
+    .add("timestamp", StringType)
+    .add("ipinyouid", StringType)
+    .add("useragent", StringType)
+    .add("IP", StringType)
+    .add("region", IntegerType)
+    .add("cityID", IntegerType)
+    .add("adexchange", StringType)
+    .add("domain", StringType)
+    .add("turl", StringType)
+    .add("urlid", StringType)
+    .add("slotid", StringType)
+    .add("slotwidth", StringType)
+    .add("slotheight", StringType)
+    .add("slotvisibility", StringType)
+    .add("slotformat", StringType)
+    .add("slotprice", StringType)
+    .add("creative", StringType)
+    .add("bidprice", StringType)
+
+  val streamingInputDF: DataFrame = spark.readStream
+    .format("csv")
+    .schema(bidSchema)
+    .option("header", false)
+    .option("inferSchema", true)
+    .option("sep", "\t")
+    .option("maxFilesPerTrigger", 1)
+    .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/training2nd")
+  streamingInputDF.printSchema()
+
+  val ts: Column = unix_timestamp($"timestamp", "yyyyMMddHHmmssSSS").cast("timestamp")
+  val streamingCityTimeDF: DataFrame = streamingInputDF.withColumn("ts", ts).select($"cityID", $"ts")
+
+  //Join de dos dataframes en streaming
   val citySchema = new StructType().add("cityID", StringType).add("cityName", StringType)
   val staticDF: DataFrame = spark.read
     .format("csv")
@@ -106,28 +177,189 @@ object SqlStreaming extends App {
     .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/city.en.txt")
   val joinedDF = streamingCityTimeDF.join(staticDF, "cityID")
 
-  //Wait for the output show on the screen after the next statement
   val windowedCityCounts: StreamingQuery = joinedDF
     .groupBy(window($"ts", "10 minutes", "5 minutes"), $"cityName")
     .count()
-    .writeStream.outputMode("complete")
+    .writeStream.outputMode("append")
     .format("console").start()
 
-  Thread.sleep(120000)
+  def queryTerminator(query: StreamingQuery) = new Runnable {
+    def run = {
+      println(s"Stopping streaming query: ${query.id}")
+      query.stop
+    }
+  }
 
+  import java.util.concurrent.TimeUnit.SECONDS
+  // Stop the first query after 10 seconds
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
+
+  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
+  // the current thread will block indefinitely until either streaming query has finished
+  spark.streams.awaitAnyTermination
+}
+
+object ThirdExercise extends App {
+
+  val spark: SparkSession = SparkSession.builder()
+    .appName("Streaming example 3")
+    .master("local[2]")
+    .enableHiveSupport()
+    .getOrCreate()
+  val sc: SparkContext = spark.sparkContext
+
+  import spark.implicits._
+
+  // Register a StreamingQueryListener to receive notifications about state changes of streaming queries
+  import org.apache.spark.sql.streaming.StreamingQueryListener
+
+  val myQueryListener = new StreamingQueryListener {
+
+    import org.apache.spark.sql.streaming.StreamingQueryListener._
+
+    def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
+      println(s"Query ${event.id} terminated")
+    }
+
+    def onQueryStarted(event: QueryStartedEvent): Unit = {}
+
+    def onQueryProgress(event: QueryProgressEvent): Unit = {
+      println(s"Query on progress ${event.progress}")
+    }
+  }
+  spark.streams.addListener(myQueryListener)
+
+  val bidSchema: StructType = new StructType()
+    .add("bidid", StringType)
+    .add("timestamp", StringType)
+    .add("ipinyouid", StringType)
+    .add("useragent", StringType)
+    .add("IP", StringType)
+    .add("region", IntegerType)
+    .add("cityID", IntegerType)
+    .add("adexchange", StringType)
+    .add("domain", StringType)
+    .add("turl", StringType)
+    .add("urlid", StringType)
+    .add("slotid", StringType)
+    .add("slotwidth", StringType)
+    .add("slotheight", StringType)
+    .add("slotvisibility", StringType)
+    .add("slotformat", StringType)
+    .add("slotprice", StringType)
+    .add("creative", StringType)
+    .add("bidprice", StringType)
+
+  val streamingInputDF: DataFrame = spark.readStream
+    .format("csv")
+    .schema(bidSchema)
+    .option("header", false)
+    .option("inferSchema", true)
+    .option("sep", "\t")
+    .option("maxFilesPerTrigger", 1)
+    .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/training2nd")
+  streamingInputDF.printSchema()
+
+  val citySchema = new StructType().add("cityID", StringType).add("cityName", StringType)
+  val staticDF: DataFrame = spark.read
+    .format("csv")
+    .schema(citySchema)
+    .option("header", false)
+    .option("inferSchema", true)
+    .option("sep", "\t")
+    .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/city.en.txt")
+
+  val ts: Column = unix_timestamp($"timestamp", "yyyyMMddHHmmssSSS").cast("timestamp")
   val streamingCityNameBidsTimeDF = streamingInputDF.
     withColumn("ts", ts)
     .select($"ts", $"bidid", $"cityID", $"bidprice", $"slotprice")
     .join(staticDF, "cityID")
 
-  //Wait for the output show on the screen after the next statement
   val cityBids: StreamingQuery = streamingCityNameBidsTimeDF
     .select($"ts", $"bidid", $"bidprice", $"slotprice", $"cityName")
     .writeStream.outputMode("append")
     .format("console")
     .start()
 
-  Thread.sleep(120000)
+  def queryTerminator(query: StreamingQuery) = new Runnable {
+    def run = {
+      println(s"Stopping streaming query: ${query.id}")
+      query.stop
+    }
+  }
+
+  import java.util.concurrent.TimeUnit.SECONDS
+  // Stop the first query after 10 seconds
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
+
+  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
+  // the current thread will block indefinitely until either streaming query has finished
+  spark.streams.awaitAnyTermination
+
+}
+
+object FourthExample extends App {
+
+  val spark: SparkSession = SparkSession.builder()
+    .appName("Streaming example 2")
+    .master("local[2]")
+    .enableHiveSupport()
+    .getOrCreate()
+  val sc: SparkContext = spark.sparkContext
+
+  import spark.implicits._
+
+  // Register a StreamingQueryListener to receive notifications about state changes of streaming queries
+  import org.apache.spark.sql.streaming.StreamingQueryListener
+
+  val myQueryListener = new StreamingQueryListener {
+
+    import org.apache.spark.sql.streaming.StreamingQueryListener._
+
+    def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
+      println(s"Query ${event.id} terminated")
+    }
+
+    def onQueryStarted(event: QueryStartedEvent): Unit = {}
+
+    def onQueryProgress(event: QueryProgressEvent): Unit = {
+      println(s"Query on progress ${event.progress}")
+    }
+  }
+  spark.streams.addListener(myQueryListener)
+
+  val bidSchema: StructType = new StructType()
+    .add("bidid", StringType)
+    .add("timestamp", StringType)
+    .add("ipinyouid", StringType)
+    .add("useragent", StringType)
+    .add("IP", StringType)
+    .add("region", IntegerType)
+    .add("cityID", IntegerType)
+    .add("adexchange", StringType)
+    .add("domain", StringType)
+    .add("turl", StringType)
+    .add("urlid", StringType)
+    .add("slotid", StringType)
+    .add("slotwidth", StringType)
+    .add("slotheight", StringType)
+    .add("slotvisibility", StringType)
+    .add("slotformat", StringType)
+    .add("slotprice", StringType)
+    .add("creative", StringType)
+    .add("bidprice", StringType)
+
+  val streamingInputDF: DataFrame = spark.readStream
+    .format("csv")
+    .schema(bidSchema)
+    .option("header", false)
+    .option("inferSchema", true)
+    .option("sep", "\t")
+    .option("maxFilesPerTrigger", 1)
+    .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/training2nd")
+  streamingInputDF.printSchema()
 
   //Code for Using the Dataset API in Structured Streaming section
   case class Bid(
@@ -176,6 +408,20 @@ object SqlStreaming extends App {
 
   spark.sql("select * from aggregateTable").show()
 
+  val staticDF: DataFrame = spark.read
+    .format("csv")
+    .schema(citySchema)
+    .option("header", false)
+    .option("inferSchema", true)
+    .option("sep", "\t")
+    .load("file:///Users/rafaelgarrote/Downloads/ipinyou.contest.dataset-season2/city.en.txt")
+
+  val ts: Column = unix_timestamp($"timestamp", "yyyyMMddHHmmssSSS").cast("timestamp")
+  val streamingCityNameBidsTimeDF = streamingInputDF.
+    withColumn("ts", ts)
+    .select($"ts", $"bidid", $"cityID", $"bidprice", $"slotprice")
+    .join(staticDF, "cityID")
+
   //Code for Using the File Sink to save output to a partitioned table section
   val cityBidsParquet = streamingCityNameBidsTimeDF
     .select($"bidid", $"bidprice", $"slotprice", $"cityName")
@@ -185,8 +431,24 @@ object SqlStreaming extends App {
     .option("checkpointLocation", "hdfs://localhost:9000/poutcp")
     .start()
 
+  def queryTerminator(query: StreamingQuery) = new Runnable {
+    def run = {
+      println(s"Stopping streaming query: ${query.id}")
+      query.stop
+    }
+  }
+
+  import java.util.concurrent.TimeUnit.SECONDS
+  // Stop the first query after 10 seconds
+  Executors.newSingleThreadScheduledExecutor.
+    scheduleWithFixedDelay(queryTerminator(windowedCounts), 1200, 60 * 5, SECONDS)
+
+  // Use StreamingQueryManager to wait for any query termination (either q1 or q2)
+  // the current thread will block indefinitely until either streaming query has finished
+  spark.streams.awaitAnyTermination
+
   //Code for Monitoring streaming queries section
-  spark.streams.active
+  /*spark.streams.active
     .foreach(x => println("ID:"+ x.id + "             Run ID:"+ x.runId + "               Status: "+ x.status))
 
   // get the unique identifier of the running query that persists across restarts from checkpoint data
