@@ -7,8 +7,8 @@ import org.apache.spark.sql.functions.dayofmonth
 import org.apache.spark.sql.functions.month
 import org.apache.spark.sql.functions.year
 import org.apache.spark.sql.types.TimestampType
-//import org.neo4j.spark.Neo4jConfig
-//import org.neo4j.spark.Neo4jDataFrame.execute
+import org.neo4j.spark.Neo4jConfig
+import org.neo4j.spark.Neo4jDataFrame.execute
 
 
 class WriterFunctions(self: DataFrame, session: SparkSession) {
@@ -29,7 +29,7 @@ class WriterFunctions(self: DataFrame, session: SparkSession) {
     }
   }
 
-  /*def writeNeo4jDF: Unit = {
+  def writeNeo4jDF: Unit = {
     val mergeStatement = s"""
       UNWIND {rows} as row
       MERGE (source:`User` {`id` : row.source.`id`, `screen_name` : row.source.`screen_name`, `name` : row.source.`name`}) ON CREATE SET source+=row.source
@@ -59,7 +59,7 @@ class WriterFunctions(self: DataFrame, session: SparkSession) {
       println(params)
       execute(config, mergeStatement, Map("rows" -> params).asJava)
     })
-  }*/
+  }
 
 }
 

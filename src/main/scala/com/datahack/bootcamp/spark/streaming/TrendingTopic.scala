@@ -36,7 +36,7 @@ object TrendingTopic extends App {
   // countEnglishTweetsLastMinute(ssc)
   // countTweetsByLangLastMinute(ssc)
   // englishHashTagsWithMoreThanOneOccurrences(ssc)
-  // trendingTopic(ssc)
+   trendingTopic(ssc)
 
   // Número de tweets disponibles cada 10 segundos
   def countTweetsEach20Seconds(ssc: StreamingContext): Unit = {
@@ -89,7 +89,7 @@ object TrendingTopic extends App {
   // Ayuda: utiliza el método transform y forEachRDD
   def trendingTopic(ssc: StreamingContext) {
     val stream: ReceiverInputDStream[Status] = TwitterUtils.createStream(ssc, twitterAuth = Some(auth))
-    stream.filter(tweet => tweet.getLang.equals("en"))
+    /*stream.filter(tweet => tweet.getLang.equals("en"))
       .flatMap(tweet => tweet.getHashtagEntities)
       .map(hashTag => (hashTag.getText, 1)).reduceByKeyAndWindow((x, y) => x + y, Minutes(1))
       .transform(rdd => rdd.sortBy(hashtagPair => hashtagPair._2, false))
@@ -98,7 +98,14 @@ object TrendingTopic extends App {
         println("\nPopular topics in last 60 seconds (%s total):".format(rdd.count()))
         topList.foreach { case (tag, count) => println("%s (%d tweets)".format(tag, count)) }
       })
+*/
+    def extractHashtag(s:String) = {
+      s.split(" ").filter(s => s.startsWith("#"))
+    }
 
+    stream.filter(st => st.getLang == "es" || st.getLang == "en").flatMap(st => extractHashtag(st.getText))
+      .map(h => (h,1)).reduceByKeyAndWindow((x:Int,y:Int) =>x + y,Seconds(60),Seconds(10))
+      .foreachRDD(rdd => rdd.sortBy(p => p._2,false).take(10).foreach(println))
     ssc.start()
     ssc.awaitTermination()
   }

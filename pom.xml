@@ -18,6 +18,7 @@
         <logback.version>1.1.7</logback.version>
         <scalatest.version>3.0.5</scalatest.version>
         <play-json.version>2.5.4</play-json.version>
+        <elastic.version>5.3.0</elastic.version>
     </properties>
 
     <dependencies>
@@ -64,6 +65,17 @@
             <groupId>org.apache.bahir</groupId>
             <artifactId>spark-streaming-twitter_2.11</artifactId>
             <version>2.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-spark-20_${scala.binary.version}</artifactId>
+            <version>${elastic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>neo4j-contrib</groupId>
+            <artifactId>neo4j-spark-connector</artifactId>
+            <version>2.0.0-M2</version>
         </dependency>
 
         <dependency>
@@ -136,6 +148,14 @@
             <version>${spark.version}_0.11.0</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <!-- list of other repositories -->
+        <repository>
+            <id>SparkPackagesRepo</id>
+            <url>http://dl.bintray.com/spark-packages/maven</url>
+        </repository>
+    </repositories>
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
